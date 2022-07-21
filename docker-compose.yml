@@ -4,12 +4,28 @@ volumes:
   apps:
   config:
   data:
+  db:
 networks:
   customnetwork:
     ipam:
       config:
         - subnet: 172.16.0.0/16
 services:
+  db:
+    image: postgres:alpine
+    hostname: postgres-db
+    restart: always
+    volumes:
+      - db:/var/lib/postgresql/data
+    env_file:
+      - db.env
+    networks:
+      - customnetwork
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      - customnetwork
   nextbisht:
     hostname: next
     restart: always
@@ -18,6 +34,14 @@ services:
     ports:
       - 80:80
     image: nextcloud:latest
+    environment:
+      - POSTGRES_HOST=postgres-db
+      - REDIS_HOST=redis
+    env_file:
+      - db.env
+    depends_on:
+      - db
+      - redis
     volumes:
       - nextcloud:/var/www/html 
       - apps:/var/www/html/custom_apps
