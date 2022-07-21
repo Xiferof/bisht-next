@@ -1,0 +1,43 @@
+version: '3'
+volumes:
+  nextcloud:
+  apps:
+  config:
+  data:
+networks:
+  customnetwork:
+    ipam:
+      config:
+        - subnet: 172.16.0.0/16
+services:
+  nextbisht:
+    hostname: next
+    restart: always
+    networks:
+      - customnetwork
+    ports:
+      - 80:80
+    image: nextcloud:latest
+    volumes:
+      - nextcloud:/var/www/html 
+      - apps:/var/www/html/custom_apps
+      - config:/var/www/html/config
+      - data:/var/www/html/data
+  webserver:
+    image: nginx:latest
+    ports:
+      - 8080:80
+      - 8081:443
+    restart: always
+    networks:
+      - customnetwork
+    volumes:
+      - ./nginx/conf/:/etc/nginx/conf.d/:ro
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+
+  # certbot:
+  #   image: certbot/certbot:latest
+  #   volumes:
+  #     - ./certbot/www/:/var/www/certbot/:rw 
+  #     - ./certbot/conf/:/etc/letsencrypt/:rw
